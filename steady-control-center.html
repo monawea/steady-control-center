@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steady Control Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface-2: #F4F3EF;
+    --surface-3: #EDECEA;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.13);
+    --text: #1A1917;
+    --text-2: #5C5B57;
+    --text-3: #999890;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --purple: #534AB7; --purple-bg: #EEEDFE; --purple-dark: #3C3489;
+    --coral: #993C1D; --coral-bg: #FAECE7; --coral-dark: #712B13;
+    --sage: #3B6D11; --sage-bg: #EAF3DE; --sage-dark: #27500A;
+    --blue: #185FA5; --blue-bg: #E6F1FB;
+    --amber: #854F0B; --amber-bg: #FAEEDA;
+    --green: #0F6E56; --green-bg: #E1F5EE;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .app { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 0.5px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 10;
+  }
+
+  .sidebar-logo {
+    padding: 0 1.25rem 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 1rem;
+  }
+  .sidebar-logo-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    color: var(--text);
+  }
+  .sidebar-logo-title em { font-style: italic; color: var(--text-2); }
+  .sidebar-logo-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; font-weight: 300; }
+
+  .sidebar-section { padding: 0 0.75rem; margin-bottom: 1.25rem; }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-3);
+    padding: 0 0.5rem; margin-bottom: 4px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 13px; color: var(--text-2);
+    cursor: pointer; border: none; background: none;
+    width: 100%; text-align: left; font-family: 'DM Sans', sans-serif;
+    transition: background 0.12s, color 0.12s;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: var(--surface-2); color: var(--text); font-weight: 500; }
+  .nav-item i { font-size: 15px; flex-shrink: 0; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-left: auto; }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 1.25rem 0;
+    border-top: 0.5px solid var(--border);
+  }
+  .sidebar-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; }
+  .sidebar-date { font-size: 11px; color: var(--text-3); margin-top: 4px; font-weight: 300; }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; padding: 2rem 2.5rem; max-width: 960px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* TYPOGRAPHY */
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 24px; letter-spacing: -0.3px; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text-2); font-weight: 300; margin-bottom: 1.75rem; }
+  .section-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 10px;
+  }
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 0 0 1.5rem; }
+
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+  }
+  .card-title { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+
+  /* SPACE CARDS (homepage) */
+  .space-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.1rem 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.12s;
+    display: flex; flex-direction: column; gap: 8px;
+    min-height: 130px; position: relative; overflow: hidden;
+  }
+  .space-card:hover { border-color: var(--border-md); background: var(--surface-2); }
+
+  .icon-chip {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .ic-blue { background: var(--blue-bg); color: var(--blue); }
+  .ic-green { background: var(--green-bg); color: var(--green); }
+  .ic-amber { background: var(--amber-bg); color: var(--amber); }
+  .ic-purple { background: var(--purple-bg); color: var(--purple); }
+  .ic-coral { background: var(--coral-bg); color: var(--coral); }
+  .ic-sage { background: var(--sage-bg); color: var(--sage); }
+
+  .space-card-title { font-family: 'DM Serif Display', serif; font-size: 15px; line-height: 1.2; }
+  .space-card-desc { font-size: 11px; color: var(--text-2); font-weight: 300; }
+  .badge {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500;
+  }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple-dark); }
+  .badge-coral { background: var(--coral-bg); color: var(--coral-dark); }
+  .badge-sage { background: var(--sage-bg); color: var(--sage-dark); }
+
+  /* SYSTEM CARDS */
+  .sys-card {
+    background: var(--surface-2);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative;
+  }
+  .sys-card:hover { border-color: var(--border-md); }
+  .sys-inner { display: flex; align-items: center; gap: 10px; }
+  .sys-title { font-family: 'DM Serif Display', serif; font-size: 14px; }
+  .sys-desc { font-size: 11px; color: var(--text-2); font-weight: 300; }
+  .prog-bg { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 2px; }
+
+  /* CALENDAR */
+  .cal-wrap {
+    background: var(--surface); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem 1.25rem; margin-bottom: 1.5rem;
+  }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-dow { font-size: 10px; color: var(--text-3); text-align: center; padding: 4px 0; font-weight: 500; }
+  .cal-day {
+    font-size: 11px; text-align: center; padding: 4px 2px 6px;
+    border-radius: 6px; color: var(--text-2);
+    min-height: 32px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .cal-day.today { background: var(--purple-bg); color: var(--purple-dark); font-weight: 500; }
+  .cal-day.past { color: var(--text-3); }
+  .cal-dot-row { display: flex; gap: 2px; justify-content: center; }
+  .cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--purple); }
+  .cal-upcoming { margin-top: 12px; border-top: 0.5px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .cal-event-row { display: flex; align-items: center; gap: 8px; }
+  .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); flex-shrink: 0; }
+  .cal-event-date { font-size: 10px; color: var(--text-3); min-width: 34px; }
+  .cal-event-name { font-size: 12px; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cal-event-time { font-size: 10px; color: var(--text-3); }
+
+  /* QUICK LINKS */
+  .ql-columns { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-bottom: 1.5rem; }
+  .ql-col-label { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+  .ql-item {
+    background: var(--surface-2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 10px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; transition: border-color 0.15s;
+    text-decoration: none; color: inherit;
+    font-family: 'DM Sans', sans-serif; border-style: solid;
+    width: 100%;
+  }
+  .ql-item:hover { border-color: var(--border-md); }
+  .ql-icon {
+    width: 24px; height: 24px; border-radius: 5px;
+    background: var(--surface); border: 0.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0; color: var(--text-2);
+  }
+  .ql-name { font-size: 12px; font-weight: 500; color: var(--text); }
+  .ql-add {
+    background: transparent; border: 0.5px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 8px 10px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    cursor: pointer; font-size: 11px; color: var(--text-3);
+    transition: border-color 0.15s; font-family: 'DM Sans', sans-serif; width: 100%;
+  }
+  .ql-add:hover { border-color: var(--border-md); color: var(--text-2); }
+
+  /* SYSTEM PAGES */
+  .sp-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+  .icon-lg { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+
+  .overview-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; position: relative; }
+  .overview-text { font-size: 13px; color: var(--text); line-height: 1.7; font-weight: 300; min-height: 50px; }
+  .overview-edit {
+    position: absolute; top: 10px; right: 10px;
+    font-size: 11px; color: var(--text-3); cursor: pointer;
+    border: none; background: none; display: flex; align-items: center; gap: 4px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .overview-edit:hover { color: var(--text-2); }
+  .overview-textarea {
+    width: 100%; font-size: 13px; line-height: 1.7; font-weight: 300;
+    border: none; background: none; resize: none; font-family: 'DM Sans', sans-serif;
+    color: var(--text); outline: none; min-height: 80px;
+  }
+  .save-link { font-size: 11px; color: var(--purple); cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif; padding: 4px 0 0; display: block; }
+
+  /* CHECKLISTS */
+  .checklists-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .checklist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .checklist-title { font-size: 13px; font-weight: 500; }
+  .reset-btn { font-size: 10px; color: var(--text-3); cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 3px; }
+  .reset-btn:hover { color: var(--text-2); }
+  .check-items { display: flex; flex-direction: column; gap: 4px; }
+  .check-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 0;
+    cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif;
+  }
+  .check-box {
+    width: 16px; height: 16px; border-radius: 4px; border: 0.5px solid var(--border-md);
+    display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; color: transparent; transition: all 0.12s;
+  }
+  .check-row.checked .check-box { background: var(--purple-bg); border-color: #AFA9EC; color: var(--purple); }
+  .check-label { font-size: 12px; color: var(--text-2); }
+  .check-row.checked .check-label { color: var(--text-3); text-decoration: line-through; }
+  .check-progress { font-size: 10px; color: var(--text-3); margin-top: 8px; }
+  .week-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--surface-2); color: var(--text-3); border: 0.5px solid var(--border); }
+
+  /* NOTES */
+  .notes-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .note-title { font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+  .note-area {
+    width: 100%; font-size: 12px; color: var(--text); line-height: 1.6;
+    border: none; background: none; resize: none; font-family: 'DM Sans', sans-serif;
+    outline: none; min-height: 72px; font-weight: 300;
+  }
+  .note-area::placeholder { color: var(--text-3); }
+
+  /* LINKS */
+  .links-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+  .link-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: var(--surface-2); border-radius: var(--radius-sm);
+    cursor: pointer; transition: background 0.12s;
+    border: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif;
+  }
+  .link-row:hover { background: var(--surface-3); }
+  .link-icon { font-size: 15px; flex-shrink: 0; }
+  .link-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+  .link-sub { font-size: 10px; color: var(--text-3); }
+  .link-ext { font-size: 12px; color: var(--text-3); }
+  .add-link {
+    background: transparent; border: 0.5px dashed var(--border);
+    border-radius: var(--radius-sm); padding: 9px 12px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    cursor: pointer; font-size: 11px; color: var(--text-3);
+    transition: border-color 0.15s; font-family: 'DM Sans', sans-serif; width: 100%;
+  }
+  .add-link:hover { border-color: var(--border-md); color: var(--text-2); }
+
+  /* STATS TRACKER */
+  .stats-tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; flex-wrap: wrap; align-items: center; }
+  .stats-tab {
+    font-size: 12px; padding: 6px 14px; border-radius: 20px;
+    border: 0.5px solid var(--border); background: var(--surface-2);
+    color: var(--text-2); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .stats-tab.active { background: var(--purple-bg); border-color: #AFA9EC; color: var(--purple-dark); font-weight: 500; }
+  .stats-tab.active.coral { background: var(--coral-bg); border-color: #F0997B; color: var(--coral-dark); }
+  .stats-tab.active.sage { background: var(--sage-bg); border-color: #97C459; color: var(--sage-dark); }
+  .stats-tab.active.gray { background: var(--surface-3); border-color: var(--border-md); color: var(--text); }
+  .stats-page { display: none; }
+  .stats-page.active { display: block; }
+  .export-btn {
+    margin-left: auto; font-size: 12px; padding: 6px 14px;
+    border-radius: 20px; border: 0.5px solid var(--border);
+    background: none; color: var(--text-2); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 5px;
+  }
+  .export-btn:hover { background: var(--surface-2); }
+
+  .field-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .field-label { font-size: 11px; color: var(--text-2); }
+  .st-input {
+    width: 100%; font-size: 13px; padding: 7px 10px;
+    border-radius: var(--radius-sm); border: 0.5px solid var(--border);
+    background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .st-input:focus { outline: none; border-color: var(--border-md); }
+  .st-textarea {
+    width: 100%; font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border); background: var(--surface); color: var(--text);
+    font-family: 'DM Sans', sans-serif; resize: none; min-height: 120px;
+  }
+  .st-textarea::placeholder { color: var(--text-3); }
+  .st-textarea:focus { outline: none; border-color: var(--border-md); }
+
+  .metric-card { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .metric-label { font-size: 11px; color: var(--text-3); margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 500; line-height: 1; }
+
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 12px; color: var(--text); }
+  .toggle {
+    width: 32px; height: 18px; border-radius: 9px; background: var(--border-md);
+    border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0;
+  }
+  .toggle.on { background: var(--purple); }
+  .toggle.on.coral { background: var(--coral); }
+  .toggle.on.sage { background: var(--sage); }
+  .toggle::after { content:''; position:absolute; width:12px; height:12px; border-radius:50%; background:#fff; top:3px; left:3px; transition: left 0.2s; }
+  .toggle.on::after { left: 17px; }
+
+  .income-bar-wrap { margin-bottom: 14px; }
+  .income-bar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .income-bar-name { font-size: 12px; color: var(--text-2); }
+  .income-bar-right { display: flex; align-items: center; gap: 8px; }
+  .target-input {
+    width: 80px; font-size: 12px; padding: 3px 8px;
+    border-radius: var(--radius-sm); border: 0.5px solid var(--border);
+    background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .target-input:focus { outline: none; border-color: var(--border-md); }
+  .bar-pct { font-size: 11px; font-weight: 500; color: var(--sage); min-width: 28px; text-align: right; }
+  .bar-bg { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; background: var(--sage); transition: width 0.3s; }
+
+  /* GOALS */
+  .goal-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+  .goal-row:last-child { border-bottom: none; }
+  .goal-check {
+    width: 16px; height: 16px; border-radius: 4px; border: 0.5px solid var(--border-md);
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
+    flex-shrink: 0; cursor: pointer; transition: all 0.12s; color: transparent; background: none;
+  }
+  .goal-check.done { background: var(--purple-bg); border-color: #AFA9EC; color: var(--purple); }
+  .goal-check.done.coral { background: var(--coral-bg); border-color: #F0997B; color: var(--coral-dark); }
+  .goal-check.done.sage { background: var(--sage-bg); border-color: #97C459; color: var(--sage-dark); }
+  .goal-text { font-size: 12px; color: var(--text); flex: 1; }
+  .goal-text.done { text-decoration: line-through; color: var(--text-3); }
+  .goal-del { font-size: 13px; color: var(--text-3); cursor: pointer; border: none; background: none; padding: 0; opacity: 0; }
+  .goal-row:hover .goal-del { opacity: 1; }
+  .add-goal-row { display: flex; gap: 6px; margin-top: 10px; }
+  .add-goal-input {
+    flex: 1; font-size: 12px; padding: 6px 10px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border); background: var(--surface);
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .add-goal-input:focus { outline: none; border-color: var(--border-md); }
+  .add-goal-btn {
+    font-size: 12px; padding: 6px 12px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-md); background: none; color: var(--text-2);
+    cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap;
+  }
+  .add-goal-btn:hover { background: var(--surface-2); }
+
+  /* MODULES (community system) */
+  .module-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 10px; }
+  .module-header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; cursor: pointer; transition: background 0.12s; }
+  .module-header:hover { background: var(--surface-2); }
+  .module-num { width: 26px; height: 26px; border-radius: 50%; background: var(--purple-bg); color: var(--purple); font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .module-title { font-size: 14px; font-weight: 500; flex: 1; }
+  .module-count { font-size: 11px; color: var(--text-3); }
+  .module-pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .pill-live { background: var(--purple-bg); color: var(--purple-dark); }
+  .pill-draft { background: var(--surface-3); color: var(--text-2); }
+  .lessons-list { border-top: 0.5px solid var(--border); }
+  .lesson-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 52px; border-bottom: 0.5px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .lesson-row:last-child { border-bottom: none; }
+  .lesson-row:hover { background: var(--surface-2); }
+  .lesson-name { font-size: 12px; color: var(--text); flex: 1; }
+  .lesson-type { font-size: 10px; color: var(--text-3); }
+
+  /* HOMEPAGE SUMMARY */
+  .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .summary-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; }
+  .summary-sys { font-size: 10px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+  .summary-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-2); margin-bottom: 3px; }
+  .summary-row span:last-child { font-weight: 500; color: var(--text); }
+
+  /* SECTION HEADER */
+  .section-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .section-btn { font-size: 11px; color: var(--text-3); cursor: pointer; border: none; background: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+  .section-btn:hover { color: var(--text-2); }
+
+  /* NAV BREADCRUMB */
+  .breadcrumb { display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; font-size: 12px; color: var(--text-3); }
+  .breadcrumb-link { cursor: pointer; } .breadcrumb-link:hover { color: var(--text-2); }
+  .breadcrumb-sep { color: var(--border-md); }
+  .breadcrumb-current { color: var(--text-2); }
+
+  /* DAILY INLINE INPUT */
+  .tiny-input {
+    width: 60px; font-size: 12px; padding: 4px 7px;
+    border-radius: var(--radius-sm); border: 0.5px solid var(--border);
+    background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif;
+  }
+  .tiny-input:focus { outline: none; border-color: var(--border-md); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">Steady <em>Control Center</em></div>
+      <div class="sidebar-logo-sub" id="sidebar-date"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Home</div>
+      <button class="nav-item active" onclick="navigate('home',this)"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</button>
+      <button class="nav-item" onclick="navigate('stats',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i> Stats tracker</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Spaces</div>
+      <button class="nav-item" onclick="navigate('workstation',this)"><i class="ti ti-layout-kanban" aria-hidden="true"></i> Work station<div class="nav-dot" style="background:var(--blue);"></div></button>
+      <button class="nav-item" onclick="navigate('studio',this)"><i class="ti ti-palette" aria-hidden="true"></i> Studio</button>
+      <button class="nav-item" onclick="navigate('chalkboard',this)"><i class="ti ti-writing" aria-hidden="true"></i> Chalkboard<div class="nav-dot" style="background:var(--amber);"></div></button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Systems</div>
+      <button class="nav-item" onclick="navigate('community',this)"><i class="ti ti-users-group" aria-hidden="true"></i> Community</button>
+      <button class="nav-item" onclick="navigate('traffic',this)"><i class="ti ti-trending-up" aria-hidden="true"></i> Traffic</button>
+      <button class="nav-item" onclick="navigate('income',this)"><i class="ti ti-coin" aria-hidden="true"></i> Income</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-status"><div class="status-dot"></div>Steady</div>
+      <div class="sidebar-date">Good morning — ready when you are</div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- HOME PAGE -->
+    <div class="page active" id="page-home">
+      <div class="section-label">Your spaces</div>
+      <div class="grid-3">
+        <div class="space-card" onclick="navigate('workstation')">
+          <div class="badge badge-blue">3 active</div>
+          <div class="icon-chip ic-blue"><i class="ti ti-layout-kanban" aria-hidden="true"></i></div>
+          <div><div class="space-card-title">Steady<br>Work Station</div><div class="space-card-desc">Kanban board & task flow</div></div>
+        </div>
+        <div class="space-card" onclick="navigate('studio')">
+          <div class="icon-chip ic-green"><i class="ti ti-palette" aria-hidden="true"></i></div>
+          <div><div class="space-card-title">Steady<br>Studio</div><div class="space-card-desc">Creative tools & projects</div></div>
+        </div>
+        <div class="space-card" onclick="navigate('chalkboard')">
+          <div class="badge badge-amber">2 notes</div>
+          <div class="icon-chip ic-amber"><i class="ti ti-writing" aria-hidden="true"></i></div>
+          <div><div class="space-card-title">Chalk<br>board</div><div class="space-card-desc">Notes, ideas & drafts</div></div>
+        </div>
+      </div>
+
+      <div class="section-label">May 2026</div>
+      <div class="cal-wrap">
+        <div class="cal-grid">
+          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-days"></div>
+        <div class="cal-upcoming" id="cal-upcoming"></div>
+      </div>
+
+      <div class="section-label">Your systems</div>
+      <div class="grid-3" style="margin-bottom:1.5rem;">
+        <div class="sys-card" onclick="navigate('community')">
+          <div class="badge badge-purple">Members</div>
+          <div class="sys-inner"><div class="icon-chip ic-purple"><i class="ti ti-users-group" aria-hidden="true"></i></div><div><div class="sys-title">Community System</div><div class="sys-desc">Members, engagement & courses</div></div></div>
+          <div class="prog-bg"><div class="prog-fill" style="width:68%;background:var(--purple);"></div></div>
+        </div>
+        <div class="sys-card" onclick="navigate('traffic')">
+          <div class="badge badge-coral">Growth</div>
+          <div class="sys-inner"><div class="icon-chip ic-coral"><i class="ti ti-trending-up" aria-hidden="true"></i></div><div><div class="sys-title">Traffic System</div><div class="sys-desc">Audience, reach & content</div></div></div>
+          <div class="prog-bg"><div class="prog-fill" style="width:45%;background:var(--coral);"></div></div>
+        </div>
+        <div class="sys-card" onclick="navigate('income')">
+          <div class="badge badge-sage">Revenue</div>
+          <div class="sys-inner"><div class="icon-chip ic-sage"><i class="ti ti-coin" aria-hidden="true"></i></div><div><div class="sys-title">Income System</div><div class="sys-desc">Offers, sales & revenue</div></div></div>
+          <div class="prog-bg"><div class="prog-fill" style="width:80%;background:var(--sage);"></div></div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Quick links</div>
+      <div class="ql-columns">
+        <div>
+          <div class="ql-col-label">Marketing</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="ql-item" onclick="openLink('https://canva.com')"><div class="ql-icon"><i class="ti ti-brand-canva" aria-hidden="true"></i></div><span class="ql-name">Canva</span></button>
+            <button class="ql-item" onclick="openLink('https://youtube.com')"><div class="ql-icon"><i class="ti ti-brand-youtube" aria-hidden="true"></i></div><span class="ql-name">YouTube</span></button>
+            <button class="ql-item" onclick="openLink('https://linkedin.com')"><div class="ql-icon"><i class="ti ti-brand-linkedin" aria-hidden="true"></i></div><span class="ql-name">LinkedIn</span></button>
+            <button class="ql-item" onclick="openLink('https://flodesk.com')"><div class="ql-icon"><i class="ti ti-mail-forward" aria-hidden="true"></i></div><span class="ql-name">Flodesk</span></button>
+            <button class="ql-add">+ Add</button>
+          </div>
+        </div>
+        <div>
+          <div class="ql-col-label">Operations</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="ql-item" onclick="openLink('https://drive.google.com')"><div class="ql-icon"><i class="ti ti-brand-google-drive" aria-hidden="true"></i></div><span class="ql-name">Google Drive</span></button>
+            <button class="ql-add">+ Add</button>
+          </div>
+        </div>
+        <div>
+          <div class="ql-col-label">Communication</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="ql-item" onclick="openLink('https://mail.google.com')"><div class="ql-icon"><i class="ti ti-mail" aria-hidden="true"></i></div><span class="ql-name">Gmail</span></button>
+            <button class="ql-item" onclick="openLink('https://calendar.google.com')"><div class="ql-icon"><i class="ti ti-calendar" aria-hidden="true"></i></div><span class="ql-name">Google Calendar</span></button>
+            <button class="ql-item" onclick="openLink('https://skool.com')"><div class="ql-icon"><i class="ti ti-users-group" aria-hidden="true"></i></div><span class="ql-name">Skool</span></button>
+            <button class="ql-add">+ Add</button>
+          </div>
+        </div>
+        <div>
+          <div class="ql-col-label">Financials</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="ql-item" onclick="openLink('https://stripe.com')"><div class="ql-icon"><i class="ti ti-credit-card" aria-hidden="true"></i></div><span class="ql-name">Stripe</span></button>
+            <button class="ql-item" onclick="openLink('https://relayfi.com')"><div class="ql-icon"><i class="ti ti-building-bank" aria-hidden="true"></i></div><span class="ql-name">Relay</span></button>
+            <button class="ql-add">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKSTATION -->
+    <div class="page" id="page-workstation">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Work Station</span></div>
+      <div class="sp-header"><div class="icon-lg ic-blue"><i class="ti ti-layout-kanban" aria-hidden="true"></i></div><div><div class="page-title">Steady Work Station</div><div class="page-sub">Your kanban board & task flow</div></div></div>
+      <div class="card" style="padding:2rem;text-align:center;color:var(--text-3);">
+        <i class="ti ti-layout-kanban" style="font-size:32px;display:block;margin-bottom:8px;" aria-hidden="true"></i>
+        <div style="font-size:13px;">Your kanban board lives here. Coming soon — or connect your preferred task tool via a link below.</div>
+      </div>
+    </div>
+
+    <!-- STUDIO -->
+    <div class="page" id="page-studio">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Studio</span></div>
+      <div class="sp-header"><div class="icon-lg ic-green"><i class="ti ti-palette" aria-hidden="true"></i></div><div><div class="page-title">Steady Studio</div><div class="page-sub">Creative tools & projects</div></div></div>
+      <div class="card" style="padding:2rem;text-align:center;color:var(--text-3);">
+        <i class="ti ti-palette" style="font-size:32px;display:block;margin-bottom:8px;" aria-hidden="true"></i>
+        <div style="font-size:13px;">Your studio workspace lives here. Add your creative tools and project links below.</div>
+      </div>
+    </div>
+
+    <!-- CHALKBOARD -->
+    <div class="page" id="page-chalkboard">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Chalkboard</span></div>
+      <div class="sp-header"><div class="icon-lg ic-amber"><i class="ti ti-writing" aria-hidden="true"></i></div><div><div class="page-title">Chalkboard</div><div class="page-sub">Notes, ideas & drafts</div></div></div>
+      <div class="notes-grid">
+        <div class="card"><div class="note-title">Ideas</div><textarea class="note-area" placeholder="Drop ideas here as they come..."></textarea></div>
+        <div class="card"><div class="note-title">Draft thoughts</div><textarea class="note-area" placeholder="Half-formed thoughts, things to explore..."></textarea></div>
+        <div class="card"><div class="note-title">To revisit</div><textarea class="note-area" placeholder="Things you want to come back to..."></textarea></div>
+        <div class="card"><div class="note-title">Scratch pad</div><textarea class="note-area" placeholder="Free write anything here..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- COMMUNITY SYSTEM -->
+    <div class="page" id="page-community">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Community System</span></div>
+      <div class="sp-header"><div class="icon-lg ic-purple"><i class="ti ti-users-group" aria-hidden="true"></i></div><div><div class="page-title">Community System</div><div class="page-sub">How you build, run & grow your community</div></div></div>
+
+      <div class="section-label">This is your system</div>
+      <div class="overview-box" id="ob-community">
+        <div class="overview-text" id="ot-community">Your community system is how you attract the right people, onboard them with intention, and create an environment where they stay engaged and get results. It runs through consistent touchpoints, clear course material, and a culture you model every week.</div>
+        <button class="overview-edit" onclick="editOverview('community')"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Weekly checklists</div><span class="week-badge" id="wk-comm"></span></div>
+      <div class="checklists-grid">
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Engagement</span><button class="reset-btn" onclick="resetCL('cl-comm-engage')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-comm-engage">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Welcome new members</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Post a weekly prompt or question</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Reply to unanswered posts</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Shout out a member win</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-comm-engage">0 of 4 done</div>
+        </div>
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Operations</span><button class="reset-btn" onclick="resetCL('cl-comm-ops')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-comm-ops">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Review any flagged content</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Check course completion rates</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Send weekly email to members</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Host or prep weekly call</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-comm-ops">0 of 4 done</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Course modules</div>
+      <div id="modules-list">
+        <div class="module-card">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-num">1</div><span class="module-title">Introduction & mindset</span><span class="module-count">4 lessons</span><span class="module-pill pill-live">Live</span>
+          </div>
+          <div class="lessons-list" style="display:none;">
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Welcome to the community</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">The Steady mindset</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-file-text" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Clarity workbook</span><span class="lesson-type">Workbook</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Setting your intentions</span><span class="lesson-type">Video</span></div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-num">2</div><span class="module-title">Building your foundation</span><span class="module-count">5 lessons</span><span class="module-pill pill-live">Live</span>
+          </div>
+          <div class="lessons-list" style="display:none;">
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">What is your foundation?</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-file-text" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Foundation mapping exercise</span><span class="lesson-type">Workbook</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Pillars of a steady business</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Your 90-day vision</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-template" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">90-day planning template</span><span class="lesson-type">Template</span></div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-header" onclick="toggleModule(this)">
+            <div class="module-num">3</div><span class="module-title">Systems & routines</span><span class="module-count">4 lessons</span><span class="module-pill pill-draft">Draft</span>
+          </div>
+          <div class="lessons-list" style="display:none;">
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Why systems matter</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Designing your daily routine</span><span class="lesson-type">Video</span></div>
+            <div class="lesson-row"><i class="ti ti-file-text" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Routine builder worksheet</span><span class="lesson-type">Workbook</span></div>
+            <div class="lesson-row"><i class="ti ti-player-play" style="font-size:14px;color:var(--text-3);" aria-hidden="true"></i><span class="lesson-name">Automating the small stuff</span><span class="lesson-type">Video</span></div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" style="margin-top:1rem;">
+      <div class="section-hdr"><div class="section-label">Notes</div></div>
+      <div class="notes-grid">
+        <div class="card"><div class="note-title">Strategy notes</div><textarea class="note-area" placeholder="What's your current community strategy?"></textarea></div>
+        <div class="card"><div class="note-title">Ideas & observations</div><textarea class="note-area" placeholder="Capture ideas and patterns..."></textarea></div>
+        <div class="card"><div class="note-title">Member feedback</div><textarea class="note-area" placeholder="What are members saying?"></textarea></div>
+        <div class="card"><div class="note-title">What's working</div><textarea class="note-area" placeholder="Document what's producing results..."></textarea></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Goals</div></div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div id="goals-community"></div>
+        <div class="add-goal-row"><input class="add-goal-input" id="gi-community" placeholder="Add a goal... (e.g. Reach 500 members — Jun 30)"><button class="add-goal-btn" onclick="addGoal('community')"><i class="ti ti-plus" aria-hidden="true"></i> Add</button></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Links</div>
+      <div class="links-list">
+        <button class="link-row" onclick="openLink('https://skool.com')"><i class="ti ti-users-group link-icon" style="color:var(--purple);" aria-hidden="true"></i><span class="link-name">Skool community</span><span class="link-sub">skool.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://flodesk.com')"><i class="ti ti-mail link-icon" style="color:var(--purple);" aria-hidden="true"></i><span class="link-name">Flodesk — member emails</span><span class="link-sub">flodesk.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://drive.google.com')"><i class="ti ti-brand-google-drive link-icon" style="color:var(--purple);" aria-hidden="true"></i><span class="link-name">Course resources folder</span><span class="link-sub">Google Drive</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="add-link">+ Add link</button>
+      </div>
+    </div>
+
+    <!-- TRAFFIC SYSTEM -->
+    <div class="page" id="page-traffic">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Traffic System</span></div>
+      <div class="sp-header"><div class="icon-lg ic-coral"><i class="ti ti-trending-up" aria-hidden="true"></i></div><div><div class="page-title">Traffic System</div><div class="page-sub">How you grow your audience & drive visibility</div></div></div>
+
+      <div class="section-label">This is your system</div>
+      <div class="overview-box" id="ob-traffic">
+        <div class="overview-text" id="ot-traffic">Your traffic system is how new people consistently find you and enter your world. It runs through intentional content published on the right platforms, optimized to attract your ideal person and move them toward your community and offers.</div>
+        <button class="overview-edit" onclick="editOverview('traffic')"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Weekly checklists</div><span class="week-badge" id="wk-traffic"></span></div>
+      <div class="checklists-grid">
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Content</span><button class="reset-btn" onclick="resetCL('cl-traf-content')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-traf-content">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Publish LinkedIn post</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Publish YouTube video</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Send weekly newsletter</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Repurpose top performing content</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-traf-content">0 of 4 done</div>
+        </div>
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Growth</span><button class="reset-btn" onclick="resetCL('cl-traf-growth')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-traf-growth">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Engage with 5 target accounts</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Review analytics & note trends</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Check email subscriber growth</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Pitch or plan a collab</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-traf-growth">0 of 4 done</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Notes</div>
+      <div class="notes-grid">
+        <div class="card"><div class="note-title">Strategy notes</div><textarea class="note-area" placeholder="What platforms are you focusing on?"></textarea></div>
+        <div class="card"><div class="note-title">Content ideas</div><textarea class="note-area" placeholder="Drop ideas here as they come..."></textarea></div>
+        <div class="card"><div class="note-title">What's getting traction</div><textarea class="note-area" placeholder="Posts, topics, or formats performing well..."></textarea></div>
+        <div class="card"><div class="note-title">Collab & partnership ideas</div><textarea class="note-area" placeholder="People to reach out to, podcasts to pitch..."></textarea></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Goals</div></div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div id="goals-traffic"></div>
+        <div class="add-goal-row"><input class="add-goal-input" id="gi-traffic" placeholder="Add a goal... (e.g. Reach 10k YouTube subscribers — Q3)"><button class="add-goal-btn" onclick="addGoal('traffic')"><i class="ti ti-plus" aria-hidden="true"></i> Add</button></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Links</div>
+      <div class="links-list">
+        <button class="link-row" onclick="openLink('https://linkedin.com')"><i class="ti ti-brand-linkedin link-icon" style="color:var(--coral);" aria-hidden="true"></i><span class="link-name">LinkedIn</span><span class="link-sub">linkedin.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://studio.youtube.com')"><i class="ti ti-brand-youtube link-icon" style="color:var(--coral);" aria-hidden="true"></i><span class="link-name">YouTube Studio</span><span class="link-sub">studio.youtube.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://flodesk.com')"><i class="ti ti-mail-forward link-icon" style="color:var(--coral);" aria-hidden="true"></i><span class="link-name">Flodesk — broadcasts</span><span class="link-sub">flodesk.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="add-link">+ Add link</button>
+      </div>
+    </div>
+
+    <!-- INCOME SYSTEM -->
+    <div class="page" id="page-income">
+      <div class="breadcrumb"><span class="breadcrumb-link" onclick="navigate('home')">Control Center</span><span class="breadcrumb-sep">/</span><span class="breadcrumb-current">Income System</span></div>
+      <div class="sp-header"><div class="icon-lg ic-sage"><i class="ti ti-coin" aria-hidden="true"></i></div><div><div class="page-title">Income System</div><div class="page-sub">How you convert attention into revenue</div></div></div>
+
+      <div class="section-label">This is your system</div>
+      <div class="overview-box" id="ob-income">
+        <div class="overview-text" id="ot-income">Your income system is how you consistently generate revenue from your audience and community. It runs through clear offers, a simple sales process, and regular touchpoints that move the right people toward working with you or joining your programs.</div>
+        <button class="overview-edit" onclick="editOverview('income')"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Weekly checklists</div><span class="week-badge" id="wk-income"></span></div>
+      <div class="checklists-grid">
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Sales & offers</span><button class="reset-btn" onclick="resetCL('cl-inc-sales')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-inc-sales">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Follow up on open conversations</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Send one offer-related email</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Review Stripe for any issues</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Post one piece of selling content</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-inc-sales">0 of 4 done</div>
+        </div>
+        <div class="card">
+          <div class="checklist-header"><span class="checklist-title">Finance & admin</span><button class="reset-btn" onclick="resetCL('cl-inc-finance')"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button></div>
+          <div class="check-items" id="cl-inc-finance">
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Log revenue in tracker</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Check Relay account</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Review any refund requests</span></button>
+            <button class="check-row" onclick="toggleCheck(this)"><div class="check-box"><i class="ti ti-check" aria-hidden="true"></i></div><span class="check-label">Note this week's revenue total</span></button>
+          </div>
+          <div class="check-progress" id="prog-cl-inc-finance">0 of 4 done</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Notes</div>
+      <div class="notes-grid">
+        <div class="card"><div class="note-title">Offer strategy</div><textarea class="note-area" placeholder="What are your current offers?"></textarea></div>
+        <div class="card"><div class="note-title">Pipeline & conversations</div><textarea class="note-area" placeholder="Who are you in conversation with?"></textarea></div>
+        <div class="card"><div class="note-title">Revenue goals</div><textarea class="note-area" placeholder="Monthly targets, progress notes..."></textarea></div>
+        <div class="card"><div class="note-title">What's converting</div><textarea class="note-area" placeholder="What offers or messages are driving sales?"></textarea></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-hdr"><div class="section-label">Goals</div></div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div id="goals-income"></div>
+        <div class="add-goal-row"><input class="add-goal-input" id="gi-income" placeholder="Add a goal... (e.g. Hit $10k month — Jul 31)"><button class="add-goal-btn" onclick="addGoal('income')"><i class="ti ti-plus" aria-hidden="true"></i> Add</button></div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-label">Links</div>
+      <div class="links-list">
+        <button class="link-row" onclick="openLink('https://stripe.com')"><i class="ti ti-credit-card link-icon" style="color:var(--sage);" aria-hidden="true"></i><span class="link-name">Stripe dashboard</span><span class="link-sub">stripe.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://relayfi.com')"><i class="ti ti-building-bank link-icon" style="color:var(--sage);" aria-hidden="true"></i><span class="link-name">Relay banking</span><span class="link-sub">relayfi.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="link-row" onclick="openLink('https://skool.com')"><i class="ti ti-users-group link-icon" style="color:var(--sage);" aria-hidden="true"></i><span class="link-name">Skool — offers & enrollment</span><span class="link-sub">skool.com</span><i class="ti ti-external-link link-ext" aria-hidden="true"></i></button>
+        <button class="add-link">+ Add link</button>
+      </div>
+    </div>
+
+    <!-- STATS TRACKER -->
+    <div class="page" id="page-stats">
+      <div class="page-title">Stats Tracker</div>
+      <div class="page-sub">Log your weekly and daily numbers across all three systems</div>
+
+      <div class="stats-tabs">
+        <button class="stats-tab active" onclick="switchStats('community',this)"><i class="ti ti-users-group" aria-hidden="true"></i> Community</button>
+        <button class="stats-tab" onclick="switchStats('traffic',this)"><i class="ti ti-trending-up" aria-hidden="true"></i> Traffic</button>
+        <button class="stats-tab" onclick="switchStats('income',this)"><i class="ti ti-coin" aria-hidden="true"></i> Income</button>
+        <button class="stats-tab" onclick="switchStats('allgoals',this)"><i class="ti ti-target" aria-hidden="true"></i> All goals</button>
+        <button class="export-btn" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Export CSV</button>
+      </div>
+
+      <div class="stats-page active" id="sp-community">
+        <div class="section-hdr"><div class="section-label">Weekly stats</div><span class="week-badge" id="wkst-comm"></span></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Members & activity</div>
+            <div class="field-row"><span class="field-label">Total members</span><input class="st-input" type="number" id="s-c-members" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Member activity</span><input class="st-input" type="number" id="s-c-activity" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">DM conversations</span><input class="st-input" type="number" id="s-c-dms" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Calls hosted</span><input class="st-input" type="number" id="s-c-calls" placeholder="0"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Wins this week</div>
+            <textarea class="st-textarea" id="s-c-wins" placeholder="What went well in your community this week?"></textarea>
+          </div>
+        </div>
+        <div class="section-label">Daily log</div>
+        <div class="grid-2" style="margin-bottom:1.5rem;">
+          <div class="card">
+            <div class="card-title">Today's checkins</div>
+            <div class="toggle-row"><span class="toggle-label">Posted content</span><button class="toggle" id="td-c-posted" onclick="toggleSwitch(this)"></button></div>
+            <div class="toggle-row"><span class="toggle-label">Responded to DMs</span><button class="toggle" id="td-c-dms" onclick="toggleSwitch(this)"></button></div>
+            <div class="toggle-row"><span class="toggle-label">Responded to posts & comments</span><button class="toggle" id="td-c-posts" onclick="toggleSwitch(this)"></button></div>
+            <div class="toggle-row"><span class="toggle-label">Reached zero notifications</span><button class="toggle" id="td-c-notifs" onclick="toggleSwitch(this)"></button></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Today's summary</div>
+            <div class="grid-2" style="margin-bottom:0;gap:8px;">
+              <div class="metric-card"><div class="metric-label">Done today</div><div class="metric-val" id="ds-c-done" style="color:var(--purple);">0/4</div></div>
+              <div class="metric-card"><div class="metric-label">Members total</div><div class="metric-val" id="ds-c-members" style="color:var(--purple);">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-page" id="sp-traffic">
+        <div class="section-hdr"><div class="section-label">Weekly stats</div><span class="week-badge" id="wkst-traf"></span></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Audience growth</div>
+            <div class="field-row"><span class="field-label">LinkedIn followers</span><input class="st-input" type="number" id="s-t-linkedin" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">YouTube subscribers</span><input class="st-input" type="number" id="s-t-youtube" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Email list size</span><input class="st-input" type="number" id="s-t-email" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Content pieces published</span><input class="st-input" type="number" id="s-t-content" placeholder="0"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Wins this week</div>
+            <textarea class="st-textarea" id="s-t-wins" placeholder="What got traction this week?"></textarea>
+          </div>
+        </div>
+        <div class="section-label">Daily log</div>
+        <div class="grid-2" style="margin-bottom:1.5rem;">
+          <div class="card">
+            <div class="card-title">Today's checkins</div>
+            <div class="toggle-row"><span class="toggle-label">Content posted</span><button class="toggle coral" id="td-t-posted" onclick="toggleSwitch(this,'coral')"></button></div>
+            <div class="toggle-row"><span class="toggle-label">Time spent engaging (min)</span><input class="tiny-input" type="number" id="td-t-engage" placeholder="0" oninput="updateTrafficDaily()"></div>
+            <div class="toggle-row"><span class="toggle-label">Leads gained</span><input class="tiny-input" type="number" id="td-t-leads" placeholder="0" oninput="updateTrafficDaily()"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Today's summary</div>
+            <div class="grid-3" style="margin-bottom:0;gap:8px;">
+              <div class="metric-card"><div class="metric-label">Posted</div><div class="metric-val" id="ds-t-posted" style="color:var(--coral);">No</div></div>
+              <div class="metric-card"><div class="metric-label">Mins engaging</div><div class="metric-val" id="ds-t-engage" style="color:var(--coral);">0</div></div>
+              <div class="metric-card"><div class="metric-label">Leads</div><div class="metric-val" id="ds-t-leads" style="color:var(--coral);">0</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-page" id="sp-income">
+        <div class="section-hdr"><div class="section-label">Income progress</div><span class="week-badge" id="wkst-inc"></span></div>
+        <div class="card" style="margin-bottom:1.5rem;">
+          <div class="grid-3" style="margin-bottom:1.25rem;gap:8px;">
+            <div class="metric-card"><div class="metric-label">This week</div><div class="metric-val" id="inc-week-val" style="color:var(--sage);">$0</div></div>
+            <div class="metric-card"><div class="metric-label">This month</div><div class="metric-val" id="inc-month-val" style="color:var(--sage);">$0</div></div>
+            <div class="metric-card"><div class="metric-label">This quarter</div><div class="metric-val" id="inc-qtr-val" style="color:var(--sage);">$0</div></div>
+          </div>
+          <div class="income-bar-wrap">
+            <div class="income-bar-row"><span class="income-bar-name">Weekly goal</span><div class="income-bar-right"><span style="font-size:11px;color:var(--text-3);">$</span><input class="target-input" type="number" id="goal-week" placeholder="0" oninput="updateIncomeBars()"><span class="bar-pct" id="pct-week">0%</span></div></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-week" style="width:0%"></div></div>
+          </div>
+          <div class="income-bar-wrap">
+            <div class="income-bar-row"><span class="income-bar-name">Monthly goal</span><div class="income-bar-right"><span style="font-size:11px;color:var(--text-3);">$</span><input class="target-input" type="number" id="goal-month" placeholder="0" oninput="updateIncomeBars()"><span class="bar-pct" id="pct-month">0%</span></div></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-month" style="width:0%"></div></div>
+          </div>
+          <div class="income-bar-wrap" style="margin-bottom:0;">
+            <div class="income-bar-row"><span class="income-bar-name">Quarterly goal</span><div class="income-bar-right"><span style="font-size:11px;color:var(--text-3);">$</span><input class="target-input" type="number" id="goal-qtr" placeholder="0" oninput="updateIncomeBars()"><span class="bar-pct" id="pct-qtr">0%</span></div></div>
+            <div class="bar-bg"><div class="bar-fill" id="bar-qtr" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Revenue & sales</div>
+            <div class="field-row"><span class="field-label">Total revenue this week ($)</span><input class="st-input" type="number" id="s-i-revenue" placeholder="0" oninput="updateIncomeBars()"></div>
+            <div class="field-row"><span class="field-label">New sales</span><input class="st-input" type="number" id="s-i-sales" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Refunds</span><input class="st-input" type="number" id="s-i-refunds" placeholder="0"></div>
+            <div class="field-row"><span class="field-label">Sales calls booked</span><input class="st-input" type="number" id="s-i-calls" placeholder="0"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Wins this week</div>
+            <textarea class="st-textarea" id="s-i-wins" placeholder="What converted this week?"></textarea>
+          </div>
+        </div>
+        <div class="section-label">Daily log</div>
+        <div class="grid-2" style="margin-bottom:0;">
+          <div class="card">
+            <div class="card-title">New sales today</div>
+            <div class="field-row"><span class="field-label">Number of sales</span><input class="st-input" type="number" id="td-i-sales" placeholder="0" oninput="updateIncomeDaily()"></div>
+            <div class="field-row"><span class="field-label">Revenue amount ($)</span><input class="st-input" type="number" id="td-i-rev" placeholder="0" oninput="updateIncomeDaily();updateIncomeBars()"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Today's summary</div>
+            <div class="grid-2" style="margin-bottom:0;gap:8px;">
+              <div class="metric-card"><div class="metric-label">Sales today</div><div class="metric-val" id="ds-i-sales" style="color:var(--sage);">0</div></div>
+              <div class="metric-card"><div class="metric-label">Revenue today</div><div class="metric-val" id="ds-i-rev" style="color:var(--sage);">$0</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-page" id="sp-allgoals">
+        <div class="grid-3">
+          <div class="card">
+            <div class="card-title" style="color:var(--purple);"><i class="ti ti-users-group" aria-hidden="true"></i> Community goals</div>
+            <div id="ag-community"></div>
+            <div class="add-goal-row"><input class="add-goal-input" id="ag-gi-community" placeholder="Add goal..."><button class="add-goal-btn" onclick="addGoalFrom('community','ag-gi-community')"><i class="ti ti-plus" aria-hidden="true"></i></button></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="color:var(--coral);"><i class="ti ti-trending-up" aria-hidden="true"></i> Traffic goals</div>
+            <div id="ag-traffic"></div>
+            <div class="add-goal-row"><input class="add-goal-input" id="ag-gi-traffic" placeholder="Add goal..."><button class="add-goal-btn" onclick="addGoalFrom('traffic','ag-gi-traffic')"><i class="ti ti-plus" aria-hidden="true"></i></button></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="color:var(--sage);"><i class="ti ti-coin" aria-hidden="true"></i> Income goals</div>
+            <div id="ag-income"></div>
+            <div class="add-goal-row"><input class="add-goal-input" id="ag-gi-income" placeholder="Add goal..."><button class="add-goal-btn" onclick="addGoalFrom('income','ag-gi-income')"><i class="ti ti-plus" aria-hidden="true"></i></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const goals = { community:[], traffic:[], income:[] };
+
+function navigate(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else {
+    document.querySelectorAll('.nav-item').forEach(n=>{
+      if(n.onclick && n.onclick.toString().includes("'"+id+"'")) n.classList.add('active');
+    });
+  }
+  window.scrollTo(0,0);
+}
+
+function switchStats(id, btn) {
+  document.querySelectorAll('.stats-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.stats-tab').forEach(t=>{t.classList.remove('active','coral','sage','gray');});
+  document.getElementById('sp-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='traffic') btn.classList.add('coral');
+  if(id==='income') btn.classList.add('sage');
+  if(id==='allgoals'){btn.classList.add('gray');renderAllGoals();}
+}
+
+function getWeekLabel() {
+  const now=new Date(); const start=new Date(now);
+  start.setDate(now.getDate()-now.getDay()+1);
+  const end=new Date(start); end.setDate(start.getDate()+6);
+  const fmt=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return 'Week of '+fmt(start)+' – '+fmt(end);
+}
+
+const wl=getWeekLabel();
+['wk-comm','wk-traffic','wk-income','wkst-comm','wkst-traf','wkst-inc'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=wl;});
+
+const now=new Date();
+document.getElementById('sidebar-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+function toggleCheck(btn){
+  btn.classList.toggle('checked');
+  const container=btn.closest('.check-items');
+  const all=container.querySelectorAll('.check-row');
+  const done=container.querySelectorAll('.check-row.checked');
+  const prog=document.getElementById('prog-'+container.id);
+  if(prog) prog.textContent=done.length+' of '+all.length+' done';
+}
+
+function resetCL(id){
+  const c=document.getElementById(id);
+  c.querySelectorAll('.check-row').forEach(r=>r.classList.remove('checked'));
+  const prog=document.getElementById('prog-'+id);
+  if(prog){const all=c.querySelectorAll('.check-row');prog.textContent='0 of '+all.length+' done';}
+}
+
+function editOverview(id){
+  const box=document.getElementById('ob-'+id);
+  const text=document.getElementById('ot-'+id).textContent;
+  box.innerHTML='<textarea class="overview-textarea" id="ota-'+id+'">'+text+'</textarea><button class="save-link" onclick="saveOverview(\''+id+'\')">Save</button>';
+}
+function saveOverview(id){
+  const val=document.getElementById('ota-'+id).value;
+  const box=document.getElementById('ob-'+id);
+  box.innerHTML='<div class="overview-text" id="ot-'+id+'">'+val+'</div><button class="overview-edit" onclick="editOverview(\''+id+'\')"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>';
+}
+
+function toggleModule(header){
+  const lessons=header.nextElementSibling;
+  lessons.style.display=lessons.style.display==='none'?'block':'none';
+}
+
+function toggleSwitch(btn, colorClass){
+  btn.classList.toggle('on');
+  if(colorClass) btn.classList.toggle(colorClass, btn.classList.contains('on'));
+  if(btn.id&&btn.id.startsWith('td-c-')){
+    const ids=['td-c-posted','td-c-dms','td-c-posts','td-c-notifs'];
+    const done=ids.filter(i=>document.getElementById(i)&&document.getElementById(i).classList.contains('on')).length;
+    const el=document.getElementById('ds-c-done'); if(el) el.textContent=done+'/'+ids.length;
+  }
+  if(btn.id==='td-t-posted'){
+    const el=document.getElementById('ds-t-posted'); if(el) el.textContent=btn.classList.contains('on')?'Yes':'No';
+  }
+}
+
+function updateTrafficDaily(){
+  const e=parseInt(document.getElementById('td-t-engage')?.value)||0;
+  const l=parseInt(document.getElementById('td-t-leads')?.value)||0;
+  const de=document.getElementById('ds-t-engage'); if(de) de.textContent=e;
+  const dl=document.getElementById('ds-t-leads'); if(dl) dl.textContent=l;
+}
+
+function updateIncomeDaily(){
+  const s=parseInt(document.getElementById('td-i-sales')?.value)||0;
+  const r=parseFloat(document.getElementById('td-i-rev')?.value)||0;
+  const ds=document.getElementById('ds-i-sales'); if(ds) ds.textContent=s;
+  const dr=document.getElementById('ds-i-rev'); if(dr) dr.textContent='$'+r.toLocaleString();
+}
+
+function updateIncomeBars(){
+  const weekly=parseFloat(document.getElementById('s-i-revenue')?.value)||0;
+  const daily=parseFloat(document.getElementById('td-i-rev')?.value)||0;
+  const total=weekly+daily;
+  const wG=parseFloat(document.getElementById('goal-week')?.value)||0;
+  const mG=parseFloat(document.getElementById('goal-month')?.value)||0;
+  const qG=parseFloat(document.getElementById('goal-qtr')?.value)||0;
+  const fmt=v=>'$'+Math.round(v).toLocaleString();
+  ['inc-week-val','inc-month-val','inc-qtr-val'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(total);});
+  function setBar(bId,pId,val,goal){
+    const pct=goal>0?Math.min(100,Math.round((val/goal)*100)):0;
+    const b=document.getElementById(bId); if(b) b.style.width=pct+'%';
+    const p=document.getElementById(pId); if(p) p.textContent=pct+'%';
+  }
+  setBar('bar-week','pct-week',total,wG);
+  setBar('bar-month','pct-month',total,mG);
+  setBar('bar-qtr','pct-qtr',total,qG);
+  const mv=document.getElementById('ds-c-members');
+  if(mv){const m=document.getElementById('s-c-members')?.value; if(m) mv.textContent=m;}
+}
+
+function addGoal(system){
+  const inp=document.getElementById('gi-'+system);
+  const text=inp.value.trim(); if(!text) return;
+  goals[system].push({text,done:false});
+  inp.value='';
+  renderGoals(system);
+  renderAllGoals();
+}
+function addGoalFrom(system,inputId){
+  const inp=document.getElementById(inputId);
+  const text=inp.value.trim(); if(!text) return;
+  goals[system].push({text,done:false});
+  inp.value='';
+  renderGoals(system);
+  renderAllGoals();
+}
+
+function renderGoals(system){
+  const c=document.getElementById('goals-'+system); if(!c) return;
+  c.innerHTML='';
+  const colorClass=system==='traffic'?'coral':system==='income'?'sage':'';
+  goals[system].forEach((g,i)=>{
+    const row=document.createElement('div'); row.className='goal-row';
+    row.innerHTML=`<button class="goal-check ${g.done?'done '+colorClass:''}" onclick="toggleGoal('${system}',${i})"><i class="ti ti-check" aria-hidden="true"></i></button><span class="goal-text ${g.done?'done':''}">${g.text}</span><button class="goal-del" onclick="deleteGoal('${system}',${i})"><i class="ti ti-x" aria-hidden="true"></i></button>`;
+    c.appendChild(row);
+  });
+}
+
+function renderAllGoals(){
+  ['community','traffic','income'].forEach(s=>{
+    const c=document.getElementById('ag-'+s); if(!c) return;
+    c.innerHTML='';
+    const colorClass=s==='traffic'?'coral':s==='income'?'sage':'';
+    goals[s].forEach((g,i)=>{
+      const row=document.createElement('div'); row.className='goal-row';
+      row.innerHTML=`<button class="goal-check ${g.done?'done '+colorClass:''}" onclick="toggleGoal('${s}',${i});renderAllGoals();"><i class="ti ti-check" aria-hidden="true"></i></button><span class="goal-text ${g.done?'done':''}">${g.text}</span>`;
+      c.appendChild(row);
+    });
+  });
+}
+
+function toggleGoal(system,i){
+  goals[system][i].done=!goals[system][i].done;
+  renderGoals(system);
+}
+function deleteGoal(system,i){
+  goals[system].splice(i,1);
+  renderGoals(system);
+  renderAllGoals();
+}
+
+function openLink(url){ window.open(url,'_blank'); }
+
+function getVal(id){return document.getElementById(id)?.value||'';}
+function getBool(id){return document.getElementById(id)?.classList.contains('on')?'Yes':'No';}
+
+function exportCSV(){
+  const rows=[
+    ['Steady Control Center — Stats Export'],['Week',wl],[''],
+    ['COMMUNITY'],
+    ['Members',getVal('s-c-members')],['Member activity',getVal('s-c-activity')],
+    ['DM conversations',getVal('s-c-dms')],['Calls hosted',getVal('s-c-calls')],
+    ['Wins',getVal('s-c-wins')],
+    ['Daily — Posted content',getBool('td-c-posted')],['Daily — Responded to DMs',getBool('td-c-dms')],
+    ['Daily — Responded to posts & comments',getBool('td-c-posts')],['Daily — Zero notifications',getBool('td-c-notifs')],
+    [''],
+    ['TRAFFIC'],
+    ['LinkedIn followers',getVal('s-t-linkedin')],['YouTube subscribers',getVal('s-t-youtube')],
+    ['Email list size',getVal('s-t-email')],['Content pieces published',getVal('s-t-content')],
+    ['Wins',getVal('s-t-wins')],
+    ['Daily — Content posted',getBool('td-t-posted')],['Daily — Mins engaging',getVal('td-t-engage')],
+    ['Daily — Leads gained',getVal('td-t-leads')],
+    [''],
+    ['INCOME'],
+    ['Weekly revenue',getVal('s-i-revenue')],['New sales',getVal('s-i-sales')],
+    ['Refunds',getVal('s-i-refunds')],['Sales calls booked',getVal('s-i-calls')],
+    ['Wins',getVal('s-i-wins')],
+    ['Daily — New sales',getVal('td-i-sales')],['Daily — Revenue',getVal('td-i-rev')],
+    ['Weekly goal',getVal('goal-week')],['Monthly goal',getVal('goal-month')],['Quarterly goal',getVal('goal-qtr')],
+    [''],
+    ['GOALS'],
+    ['Community goals',...goals.community.map(g=>g.text+(g.done?' (done)':''))],
+    ['Traffic goals',...goals.traffic.map(g=>g.text+(g.done?' (done)':''))],
+    ['Income goals',...goals.income.map(g=>g.text+(g.done?' (done)':''))],
+  ];
+  const csv=rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='steady-stats-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+// CALENDAR
+const calEvents=[
+  {day:1,name:'Facetime with Chris',time:'3:00 PM'},
+  {day:6,name:'Squad Assembly #2',time:'12:00 PM'},
+  {day:7,name:'The Community Clinic',time:'2:00 PM'},
+  {day:8,name:'Session 7 — Onboarding Fix',time:'1:00 PM'},
+  {day:10,name:'Meeting with Isabelle',time:'4:30 PM'},
+  {day:13,name:'Squad Meeting',time:'12:00 PM'},
+  {day:14,name:'Isabelle Meeting',time:'1:00 PM'},
+  {day:14,name:'Monetize Your Mission',time:'4:00 PM'},
+  {day:15,name:'1:1 Call (Paulo Costa)',time:'12:00 PM'},
+  {day:19,name:'Meeting with Alexa',time:'12:00 PM'},
+  {day:19,name:'Workshop with Steve',time:'2:00 PM'},
+  {day:20,name:'Squad Meeting',time:'12:00 PM'},
+  {day:20,name:'Maddy - Dr. Appointment',time:'2:30 PM'},
+  {day:21,name:'Isabelle Meeting',time:'1:00 PM'},
+  {day:22,name:'Get Paid Workshop',time:'2:00 PM'},
+  {day:27,name:'Squad Meeting',time:'12:00 PM'},
+  {day:28,name:'Isabelle Meeting',time:'1:00 PM'},
+];
+const TODAY=17;
+const firstDow=new Date(2026,4,1).getDay();
+const byDay={};
+calEvents.forEach(e=>{if(!byDay[e.day])byDay[e.day]=[];byDay[e.day].push(e);});
+const calEl=document.getElementById('cal-days');
+for(let i=0;i<firstDow;i++){const d=document.createElement('div');d.className='cal-day';calEl.appendChild(d);}
+for(let d=1;d<=31;d++){
+  const cell=document.createElement('div');
+  cell.className='cal-day'+(d===TODAY?' today':d<TODAY?' past':'');
+  const num=document.createElement('span');num.textContent=d;cell.appendChild(num);
+  if(byDay[d]){const row=document.createElement('div');row.className='cal-dot-row';const cnt=Math.min(byDay[d].length,3);for(let k=0;k<cnt;k++){const dot=document.createElement('div');dot.className='cal-dot';row.appendChild(dot);}cell.appendChild(row);}
+  calEl.appendChild(cell);
+}
+const upEl=document.getElementById('cal-upcoming');
+calEvents.filter(e=>e.day>=TODAY).slice(0,4).forEach(e=>{
+  const row=document.createElement('div');row.className='cal-event-row';
+  row.innerHTML=`<div class="cal-event-dot"></div><div class="cal-event-date">May ${e.day}</div><div class="cal-event-name">${e.name}</div><div class="cal-event-time">${e.time}</div>`;
+  upEl.appendChild(row);
+});
+</script>
+</body>
+</html>
